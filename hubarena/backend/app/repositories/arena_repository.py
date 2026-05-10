@@ -1,0 +1,27 @@
+from app.database.db import db
+from app.models.arena import Arena
+
+
+class ArenaRepository:
+
+    @staticmethod
+    def create(data):
+        arena = Arena(
+            provider_id=data["providerId"],
+            name=data["name"],
+            description=data.get("description"),
+            address=data["address"]
+        )
+
+        db.session.add(arena)
+        db.session.commit()
+
+        return arena
+
+    @staticmethod
+    def get_all():
+        return Arena.query.order_by(Arena.id.asc()).all()
+
+    @staticmethod
+    def get_by_id(arena_id):
+        return Arena.query.get(arena_id)

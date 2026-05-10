@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: hubarena-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: hubarena_db
+      POSTGRES_USER: hubarena_user
+      POSTGRES_PASSWORD: hubarena_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - hubarena_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  hubarena_postgres_data:

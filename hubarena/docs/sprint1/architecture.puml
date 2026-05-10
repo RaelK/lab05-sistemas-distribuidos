@@ -1,0 +1,67 @@
+@startuml
+title HubArena - Arquitetura Distribuída da Sprint 1
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+actor "Cliente" as Cliente
+actor "Prestador" as Prestador
+
+node "Dispositivo do Cliente" {
+  component "App Cliente\nFlutter/Dart" as AppCliente
+}
+
+node "Dispositivo do Prestador" {
+  component "App Prestador\nFlutter/Dart" as AppPrestador
+}
+
+node "Servidor de Aplicação" {
+  component "Backend REST\nFlask/Python" as Backend
+  component "Controllers" as Controllers
+  component "Services" as Services
+  component "Repositories" as Repositories
+  component "SQLAlchemy ORM" as ORM
+}
+
+database "PostgreSQL\nhubarena_db" as PostgreSQL
+
+queue "RabbitMQ\nMOM - Sprint 2" as RabbitMQ
+
+Cliente --> AppCliente : usa
+Prestador --> AppPrestador : usa
+
+AppCliente --> Backend : HTTP REST / JSON
+AppPrestador --> Backend : HTTP REST / JSON
+
+Backend --> Controllers : recebe requisições
+Controllers --> Services : aciona regras de negócio
+Services --> Repositories : acessa persistência
+Repositories --> ORM : consultas ORM
+ORM --> PostgreSQL : SQL / TCP 5432
+
+Backend --> RabbitMQ : publica eventos
+RabbitMQ --> AppPrestador : reservation_created
+RabbitMQ --> AppCliente : reservation_accepted\nreservation_rejected
+
+note right of Backend
+Endpoints principais:
+- POST /users
+- GET /users
+- POST /arenas
+- GET /arenas
+- POST /courts
+- GET /courts
+- POST /reservations
+- PUT /reservations/{id}/accept
+- PUT /reservations/{id}/reject
+end note
+
+note bottom of RabbitMQ
+Na Sprint 1, o RabbitMQ é representado
+na arquitetura para preparar a Sprint 2.
+A implementação assíncrona real será
+feita na etapa de integração com MOM.
+end note
+
+@enduml
