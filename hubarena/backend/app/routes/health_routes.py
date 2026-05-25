@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify
 from sqlalchemy import text
 
 from app.database.db import db
+from app.messaging.rabbitmq_client import RabbitMQClient
 
 health_bp = Blueprint("health", __name__)
 
@@ -26,5 +27,24 @@ def database_health_check():
         return jsonify({
             "status": "error",
             "database": "PostgreSQL unavailable",
+            "message": str(error)
+        }), 500
+
+
+@health_bp.get("/health/rabbitmq")
+def rabbitmq_health_check():
+    try:
+        queue_name = RabbitMQClient.declare_reservation_queue()
+
+        return jsonify({
+            "status": "ok",
+            "rabbitmq": "connected",
+            "queue": queue_name
+        }), 200
+
+    except Exception as error:
+        return jsonify({
+            "status": "error",
+            "rabbitmq": "unavailable",
             "message": str(error)
         }), 500

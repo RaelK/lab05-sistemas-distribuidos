@@ -1,5 +1,6 @@
 from datetime import date, time
 
+from app.messaging.event_publisher import EventPublisher
 from app.repositories.court_repository import CourtRepository
 from app.repositories.reservation_repository import ReservationRepository
 from app.repositories.user_repository import UserRepository
@@ -59,7 +60,14 @@ class ReservationService:
             "endTime": end_time
         }
 
-        return ReservationRepository.create(parsed_data)
+        reservation = ReservationRepository.create(parsed_data)
+
+        EventPublisher.publish(
+            event_name="reservation.created",
+            payload=reservation.to_dict()
+        )
+
+        return reservation
 
     @staticmethod
     def list_reservations():
@@ -81,7 +89,23 @@ class ReservationService:
         if reservation.status != "PENDING":
             raise ValueError("Somente reservas pendentes podem ser aceitas.")
 
-        return ReservationRepository.update_status(reservation, "ACCEPTED")
+        previous_status = reservation.status
+
+        updated_reservation = ReservationRepository.update_status(
+            reservation,
+            "ACCEPTED"
+        )
+
+        EventPublisher.publish(
+            event_name="reservation.status_changed",
+            payload={
+                "reservation": updated_reservation.to_dict(),
+                "previousStatus": previous_status,
+                "newStatus": "ACCEPTED"
+            }
+        )
+
+        return updated_reservation
 
     @staticmethod
     def reject_reservation(reservation_id):
@@ -90,4 +114,20 @@ class ReservationService:
         if reservation.status != "PENDING":
             raise ValueError("Somente reservas pendentes podem ser recusadas.")
 
-        return ReservationRepository.update_status(reservation, "REJECTED")
+        previous_status = reservation.status
+
+        updated_reservation = ReservationRepository.update_status(
+            reservation,
+            "REJECTED"
+        )
+
+        EventPublisher.publish(
+            event_name="reservation.status_changed",
+            payload={
+                "reservation": updated_reservation.to_dict(),
+                "previousStatus": previous_status,
+                "newStatus": "REJECTED"
+            }
+        )
+
+        return updated_reservation
