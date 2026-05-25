@@ -1,0 +1,270 @@
+{
+  "info": {
+    "name": "HubArena - Sprint 2 - MOM RabbitMQ",
+    "description": "Coleção Postman para testar a Sprint 2 do HubArena: RabbitMQ, health do MOM, produtor, consumidor e eventos de reserva.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:5000"
+    },
+    {
+      "key": "providerId",
+      "value": "1"
+    },
+    {
+      "key": "clientId",
+      "value": "2"
+    },
+    {
+      "key": "arenaId",
+      "value": "1"
+    },
+    {
+      "key": "courtId",
+      "value": "1"
+    },
+    {
+      "key": "reservationId",
+      "value": "5"
+    },
+    {
+      "key": "reservationIdReject",
+      "value": "6"
+    }
+  ],
+  "item": [
+    {
+      "name": "1 - Health e MOM",
+      "item": [
+        {
+          "name": "GET Health API",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health",
+            "description": "Verifica se a API Flask está rodando."
+          }
+        },
+        {
+          "name": "GET Health DB",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health/db",
+            "description": "Verifica conexão com PostgreSQL."
+          }
+        },
+        {
+          "name": "GET Health RabbitMQ",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health/rabbitmq",
+            "description": "Verifica conexão com RabbitMQ e declara a fila hubarena.reservations.events."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2 - Verificação de dados existentes",
+      "item": [
+        {
+          "name": "GET Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/users",
+            "description": "Lista usuários. Para a Sprint 2, use um usuário CLIENT."
+          }
+        },
+        {
+          "name": "GET Courts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/courts",
+            "description": "Lista quadras. Para a Sprint 2, use uma quadra disponível."
+          }
+        },
+        {
+          "name": "GET Reservations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/reservations",
+            "description": "Lista reservas existentes."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3 - Setup opcional se o banco estiver vazio",
+      "description": "Use estes requests somente se o banco estiver vazio.",
+      "item": [
+        {
+          "name": "POST Create Provider",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users",
+            "description": "Cria um usuário prestador.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Arena Pampulha\",\n  \"email\": \"prestador_{{$timestamp}}@hubarena.com\",\n  \"password\": \"123456\",\n  \"role\": \"PROVIDER\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST Create Client",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users",
+            "description": "Cria um usuário cliente.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jose Cliente\",\n  \"email\": \"cliente_{{$timestamp}}@hubarena.com\",\n  \"password\": \"123456\",\n  \"role\": \"CLIENT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST Create Arena",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/arenas",
+            "description": "Cria uma arena vinculada ao prestador.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"providerId\": \"{{providerId}}\",\n  \"name\": \"HubArena Pampulha\",\n  \"description\": \"Arena esportiva com quadras de futebol society e futsal.\",\n  \"address\": \"Avenida Antonio Carlos, Belo Horizonte - MG\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST Create Court",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/courts",
+            "description": "Cria uma quadra disponível.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"arenaId\": \"{{arenaId}}\",\n  \"sport\": \"Futebol Society\",\n  \"priceHour\": 120.0,\n  \"capacity\": 10,\n  \"available\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4 - Eventos Sprint 2",
+      "item": [
+        {
+          "name": "POST Create Reservation - publica reservation.created",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/reservations",
+            "description": "Cria reserva e publica o evento reservation.created no RabbitMQ.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": \"{{clientId}}\",\n  \"courtId\": \"{{courtId}}\",\n  \"date\": \"2026-06-20\",\n  \"startTime\": \"10:00\",\n  \"endTime\": \"11:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PUT Accept Reservation - publica reservation.status_changed",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "{{baseUrl}}/reservations/{{reservationId}}/accept",
+            "description": "Aceita uma reserva pendente e publica reservation.status_changed."
+          }
+        },
+        {
+          "name": "POST Create Reservation for Reject - publica reservation.created",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/reservations",
+            "description": "Cria segunda reserva pendente para testar recusa.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": \"{{clientId}}\",\n  \"courtId\": \"{{courtId}}\",\n  \"date\": \"2026-06-21\",\n  \"startTime\": \"10:00\",\n  \"endTime\": \"11:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PUT Reject Reservation - publica reservation.status_changed",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "{{baseUrl}}/reservations/{{reservationIdReject}}/reject",
+            "description": "Recusa uma reserva pendente e publica reservation.status_changed."
+          }
+        }
+      ]
+    }
+  ]
+}
