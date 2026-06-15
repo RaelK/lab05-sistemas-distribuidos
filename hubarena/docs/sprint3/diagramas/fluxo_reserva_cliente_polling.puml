@@ -1,0 +1,48 @@
+@startuml
+title Sprint 3 - Fluxo Cliente, Backend REST e Polling - HubArena
+
+actor Cliente
+participant "App Flutter\nCliente" as App
+participant "ApiService" as Api
+participant "Backend Flask\nREST" as Backend
+database "PostgreSQL" as DB
+queue "RabbitMQ\nMOM" as MOM
+actor "Postman / Prestador" as Prestador
+
+Cliente -> App: Abre tela inicial
+App -> Api: getCourts()
+Api -> Backend: GET /courts
+Backend -> DB: Consulta quadras
+DB --> Backend: Lista de quadras
+Backend --> Api: JSON
+Api --> App: Lista de Court
+App --> Cliente: Exibe quadras disponíveis
+
+Cliente -> App: Seleciona quadra
+App --> Cliente: Exibe detalhes
+
+Cliente -> App: Cria reserva
+App -> Api: createReservation()
+Api -> Backend: POST /reservations
+Backend -> DB: Salva reserva PENDING
+Backend -> MOM: Publica evento reservation.created
+Backend --> Api: Reserva criada
+Api --> App: Reserva PENDING
+App --> Cliente: Exibe reserva pendente
+
+loop Polling a cada 5 segundos
+  App -> Api: getReservations()
+  Api -> Backend: GET /reservations
+  Backend -> DB: Consulta reservas
+  DB --> Backend: Lista de reservas
+  Backend --> Api: JSON
+  Api --> App: Reservas atualizadas
+end
+
+Prestador -> Backend: PUT /reservations/{id}/accept
+Backend -> DB: Atualiza status ACCEPTED
+Backend -> MOM: Publica evento reservation.accepted
+
+App --> Cliente: Atualiza status para ACEITA automaticamente
+
+@enduml
