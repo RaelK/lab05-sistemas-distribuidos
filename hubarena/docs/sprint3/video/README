@@ -1,0 +1,193 @@
+# Vídeo de Demonstração — Sprint 3
+
+## Objetivo do Vídeo
+
+Demonstrar o funcionamento completo do aplicativo Flutter Cliente desenvolvido para a Sprint 3 do projeto HubArena, evidenciando a integração com o backend REST, a criação de reservas e a atualização automática de status por meio de polling assíncrono.
+
+---
+
+## Funcionalidades Demonstradas
+
+Durante o vídeo foram apresentadas as seguintes funcionalidades:
+
+- Backend Flask em execução.
+- Banco de dados PostgreSQL ativo.
+- RabbitMQ em execução.
+- Aplicativo Flutter Cliente rodando no Android Emulator.
+- Navegação entre as telas do aplicativo.
+- Consumo dos endpoints REST implementados nas sprints anteriores.
+- Criação de reservas pelo cliente.
+- Atualização automática do status das reservas.
+- Validação dos endpoints utilizando o Postman.
+
+---
+
+## Telas Demonstradas
+
+### 1. Tela Inicial
+
+A tela inicial apresenta:
+
+- Banner principal do HubArena.
+- Identidade visual esportiva.
+- Lista de quadras disponíveis.
+- Navegação para detalhes da quadra.
+
+---
+
+### 2. Tela de Detalhes da Quadra
+
+Nesta tela são exibidos:
+
+- Nome da quadra.
+- Arena responsável.
+- Informações do serviço.
+- Botão para criação de reserva.
+
+---
+
+### 3. Tela de Criação de Reserva
+
+O cliente pode:
+
+- Informar data.
+- Informar horário inicial.
+- Informar horário final.
+- Enviar solicitação de reserva.
+
+Após a confirmação, a reserva é enviada ao backend por meio da API REST.
+
+---
+
+### 4. Tela "Minhas Reservas"
+
+Apresenta:
+
+- Reservas do cliente.
+- Status atual da reserva.
+- Atualização automática dos dados.
+- Indicadores visuais para cada status.
+
+Status possíveis:
+
+- PENDING
+- ACCEPTED
+- REJECTED
+
+---
+
+## Integração REST Demonstrada
+
+Endpoints utilizados pelo aplicativo:
+
+### Consultar Quadras
+
+```http
+GET /courts
+```
+
+### Consultar Reservas
+
+```http
+GET /reservations
+```
+
+### Criar Reserva
+
+```http
+POST /reservations
+```
+
+### Aceitar Reserva
+
+```http
+PUT /reservations/{id}/accept
+```
+
+### Rejeitar Reserva
+
+```http
+PUT /reservations/{id}/reject
+```
+
+---
+
+## Demonstração do Polling Assíncrono
+
+Fluxo demonstrado:
+
+1. Cliente cria uma reserva pelo aplicativo.
+2. Backend registra a reserva com status `PENDING`.
+3. Aplicativo exibe a reserva na tela "Minhas Reservas".
+4. Utilizando o Postman, a reserva é alterada para `ACCEPTED`.
+5. O aplicativo consulta automaticamente o backend a cada 5 segundos.
+6. O status da reserva é atualizado sem qualquer ação do usuário.
+
+---
+
+## Fluxo Completo Demonstrado
+
+```text
+Cliente
+   │
+   ▼
+Aplicativo Flutter
+   │
+   ▼
+Backend REST Flask
+   │
+   ▼
+PostgreSQL
+   │
+   ▼
+Reserva criada (PENDING)
+   │
+   ▼
+Alteração via Postman
+   │
+   ▼
+Reserva ACCEPTED
+   │
+   ▼
+Polling Automático
+   │
+   ▼
+Atualização da Interface
+```
+
+---
+
+## Estrutura da Pasta
+
+```text
+docs/
+└── sprint3/
+    └── video/
+        ├── README_VIDEO.md
+        └── sprint3_demonstracao.mp4
+```
+
+---
+
+## Arquivo de Vídeo
+
+Adicionar manualmente nesta pasta o vídeo:
+
+```text
+sprint3_demonstracao.mp4
+```
+
+---
+
+## Resultado da Sprint 3
+
+A Sprint 3 atende aos seguintes requisitos:
+
+- Aplicativo Flutter funcional.
+- Integração completa com backend REST.
+- Três telas obrigatórias implementadas.
+- Atualização assíncrona por polling.
+- Arquitetura documentada com diagramas PlantUML.
+- Código-fonte disponível para execução.
+- APK gerado e validado.
+- Demonstração prática registrada em vídeo.
