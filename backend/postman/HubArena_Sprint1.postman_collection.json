@@ -1,0 +1,240 @@
+{
+  "info": {
+    "name": "HubArena - Sprint 1",
+    "description": "Coleção Postman dos endpoints REST implementados na Sprint 1 do HubArena.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://127.0.0.1:5000/health"
+          }
+        },
+        {
+          "name": "Database Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://127.0.0.1:5000/health/db"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Create Provider",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "http://127.0.0.1:5000/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Arena Pampulha\",\n  \"email\": \"prestador@hubarena.com\",\n  \"password\": \"123456\",\n  \"role\": \"PROVIDER\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Create Client",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "http://127.0.0.1:5000/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jose Cliente\",\n  \"email\": \"cliente@hubarena.com\",\n  \"password\": \"123456\",\n  \"role\": \"CLIENT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://127.0.0.1:5000/users"
+          }
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://127.0.0.1:5000/users/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Arenas",
+      "item": [
+        {
+          "name": "Create Arena",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "http://127.0.0.1:5000/arenas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"providerId\": 1,\n  \"name\": \"HubArena Pampulha\",\n  \"description\": \"Arena esportiva com quadras de futebol society e futsal.\",\n  \"address\": \"Avenida Antonio Carlos, Belo Horizonte - MG\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List Arenas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://127.0.0.1:5000/arenas"
+          }
+        },
+        {
+          "name": "Get Arena By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://127.0.0.1:5000/arenas/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Courts",
+      "item": [
+        {
+          "name": "Create Court",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "http://127.0.0.1:5000/courts",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"arenaId\": 1,\n  \"sport\": \"Futebol Society\",\n  \"priceHour\": 120.0,\n  \"capacity\": 10,\n  \"available\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List Courts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://127.0.0.1:5000/courts"
+          }
+        },
+        {
+          "name": "Get Court By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://127.0.0.1:5000/courts/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reservations",
+      "item": [
+        {
+          "name": "Create Reservation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "http://127.0.0.1:5000/reservations",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": 2,\n  \"courtId\": 1,\n  \"date\": \"2026-05-15\",\n  \"startTime\": \"19:00\",\n  \"endTime\": \"20:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List Reservations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://127.0.0.1:5000/reservations"
+          }
+        },
+        {
+          "name": "Get Reservation By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://127.0.0.1:5000/reservations/1"
+          }
+        },
+        {
+          "name": "Accept Reservation",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "http://127.0.0.1:5000/reservations/1/accept"
+          }
+        },
+        {
+          "name": "Reject Reservation",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "http://127.0.0.1:5000/reservations/1/reject"
+          }
+        }
+      ]
+    }
+  ]
+}

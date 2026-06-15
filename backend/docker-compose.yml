@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: hubarena-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: hubarena_db
+      POSTGRES_USER: hubarena_user
+      POSTGRES_PASSWORD: hubarena_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - hubarena_postgres_data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: hubarena-rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: hubarena
+      RABBITMQ_DEFAULT_PASS: hubarena_pass
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - hubarena_rabbitmq_data:/var/lib/rabbitmq
+
+volumes:
+  hubarena_postgres_data:
+  hubarena_rabbitmq_data:
