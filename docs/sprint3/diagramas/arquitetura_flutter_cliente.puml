@@ -1,0 +1,92 @@
+@startuml
+title Sprint 3 - Arquitetura do App Flutter Cliente - HubArena
+
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam componentStyle rectangle
+
+package "Flutter App - Cliente" {
+
+  package "Presentation Layer" {
+    package "screens" {
+      [HomeScreen\nListagem de quadras]
+      [CourtDetailsScreen\nDetalhes da quadra]
+      [CreateReservationScreen\nCriar reserva]
+      [ReservationsScreen\nMinhas reservas]
+    }
+
+    package "widgets" {
+      [CourtCard\nCard de quadra]
+      [StatusBadge\nStatus da reserva]
+    }
+  }
+
+  package "Data Layer" {
+    package "models" {
+      [Arena]
+      [Court]
+      [Reservation]
+    }
+
+    package "services" {
+      [ApiService\nHTTP REST]
+    }
+  }
+
+  package "Core Layer" {
+    package "config" {
+      [AppConfig\nAPI_BASE_URL\nCLIENT_ID\nPolling interval]
+    }
+
+    package "theme" {
+      [AppTheme\nTema esportivo]
+    }
+  }
+}
+
+cloud "Backend Flask REST" {
+  [GET /arenas]
+  [GET /courts]
+  [GET /reservations]
+  [POST /reservations]
+  [PUT /reservations/{id}/accept]
+  [PUT /reservations/{id}/reject]
+}
+
+database "PostgreSQL" as DB
+queue "RabbitMQ / MOM" as MOM
+
+[HomeScreen\nListagem de quadras] --> [ApiService\nHTTP REST]
+[CourtDetailsScreen\nDetalhes da quadra] --> [CourtCard\nCard de quadra]
+[CreateReservationScreen\nCriar reserva] --> [ApiService\nHTTP REST]
+[ReservationsScreen\nMinhas reservas] --> [ApiService\nHTTP REST]
+[ReservationsScreen\nMinhas reservas] --> [StatusBadge\nStatus da reserva]
+
+[ApiService\nHTTP REST] --> [Arena]
+[ApiService\nHTTP REST] --> [Court]
+[ApiService\nHTTP REST] --> [Reservation]
+
+[ApiService\nHTTP REST] --> [GET /arenas]
+[ApiService\nHTTP REST] --> [GET /courts]
+[ApiService\nHTTP REST] --> [GET /reservations]
+[ApiService\nHTTP REST] --> [POST /reservations]
+
+[GET /arenas] --> DB
+[GET /courts] --> DB
+[GET /reservations] --> DB
+[POST /reservations] --> DB
+[POST /reservations] --> MOM
+
+[PUT /reservations/{id}/accept] --> DB
+[PUT /reservations/{id}/accept] --> MOM
+[PUT /reservations/{id}/reject] --> DB
+[PUT /reservations/{id}/reject] --> MOM
+
+note right of [ReservationsScreen\nMinhas reservas]
+Atualização assíncrona por polling:
+GET /reservations a cada 5 segundos.
+Quando o backend altera o status,
+o app reflete a mudança sem ação manual.
+end note
+
+@enduml

@@ -41,7 +41,9 @@ class ApiService {
   }
 
   Future<List<Arena>> getArenas() async {
-    final response = await http.get(_uri('/arenas'));
+    final response = await http
+        .get(_uri('/arenas'))
+        .timeout(const Duration(seconds: 8));
     _validateResponse(response);
 
     final decoded = _decodeResponse(response) as List<dynamic>;
@@ -52,7 +54,9 @@ class ApiService {
   }
 
   Future<List<Court>> getCourts() async {
-    final response = await http.get(_uri('/courts'));
+    final response = await http
+        .get(_uri('/courts'))
+        .timeout(const Duration(seconds: 8));
     _validateResponse(response);
 
     final decoded = _decodeResponse(response) as List<dynamic>;
@@ -63,7 +67,9 @@ class ApiService {
   }
 
   Future<List<Reservation>> getReservations() async {
-    final response = await http.get(_uri('/reservations'));
+    final response = await http
+        .get(_uri('/reservations'))
+        .timeout(const Duration(seconds: 8));
     _validateResponse(response);
 
     final decoded = _decodeResponse(response) as List<dynamic>;
@@ -80,17 +86,19 @@ class ApiService {
     required String startTime,
     required String endTime,
   }) async {
-    final response = await http.post(
-      _uri('/reservations'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'clientId': clientId,
-        'courtId': courtId,
-        'date': date,
-        'startTime': startTime,
-        'endTime': endTime,
-      }),
-    );
+    final response = await http
+        .post(
+          _uri('/reservations'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'clientId': clientId,
+            'courtId': courtId,
+            'date': date,
+            'startTime': startTime,
+            'endTime': endTime,
+          }),
+        )
+        .timeout(const Duration(seconds: 8));
 
     _validateResponse(response);
 

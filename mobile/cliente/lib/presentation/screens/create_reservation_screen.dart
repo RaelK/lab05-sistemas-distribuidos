@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/config/app_config.dart';
+import '../../core/theme/app_theme.dart';
 import '../../data/models/court.dart';
 import '../../data/services/api_service.dart';
 import 'reservations_screen.dart';
@@ -102,9 +103,7 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Reserva criada com sucesso. Status inicial: PENDENTE.',
-          ),
+          content: Text('Reserva criada com sucesso. Status: PENDENTE.'),
         ),
       );
 
@@ -137,53 +136,68 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
     final endText = _formatTime(_endTime);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Criar reserva')),
+      appBar: AppBar(title: const Text('Nova reserva')),
       body: ListView(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(16),
         children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.court.sport,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(widget.arenaName),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Cliente ID: ${AppConfig.clientId}',
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ],
+          Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppTheme.darkGreen, AppTheme.primaryGreen],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              borderRadius: BorderRadius.circular(26),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.sports_score, color: Colors.white, size: 42),
+                const SizedBox(height: 14),
+                Text(
+                  widget.court.sport,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  widget.arenaName,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Cliente ID ${AppConfig.clientId}',
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.85)),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           _PickerTile(
             icon: Icons.calendar_month,
-            title: 'Data',
+            title: 'Data da reserva',
             value: dateText,
             onTap: _pickDate,
           ),
           _PickerTile(
             icon: Icons.access_time,
-            title: 'Início',
+            title: 'Horário de início',
             value: startText,
             onTap: _pickStartTime,
           ),
           _PickerTile(
             icon: Icons.timer,
-            title: 'Fim',
+            title: 'Horário de término',
             value: endText,
             onTap: _pickEndTime,
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: _isLoading ? null : _submit,
             icon: _isLoading
@@ -192,7 +206,7 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.sports_score),
+                : const Icon(Icons.check_circle),
             label: Text(
               _isLoading ? 'Criando reserva...' : 'Confirmar reserva',
             ),
@@ -221,11 +235,11 @@ class _PickerTile extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
+        leading: Icon(icon, color: AppTheme.primaryGreen),
         title: Text(title),
         subtitle: Text(
           value,
-          style: const TextStyle(fontWeight: FontWeight.w800),
+          style: const TextStyle(fontWeight: FontWeight.w900),
         ),
         trailing: const Icon(Icons.edit_calendar),
         onTap: onTap,

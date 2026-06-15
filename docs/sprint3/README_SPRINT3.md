@@ -1,46 +1,73 @@
 # Sprint 3 — Aplicativo Flutter Cliente
 
-## Objetivo
+## 1. Objetivo
 
-Desenvolver o aplicativo Flutter destinado ao cliente do HubArena, permitindo consultar quadras esportivas, visualizar detalhes, criar reservas e acompanhar o status das reservas com atualização automática.
+Desenvolver o aplicativo Flutter destinado ao cliente do HubArena, permitindo consultar quadras esportivas, visualizar detalhes, criar reservas e acompanhar automaticamente o status das reservas.
 
-## Funcionalidades implementadas
+A Sprint 3 implementa o aplicativo móvel do cliente com integração ao backend REST Flask desenvolvido nas Sprints 1 e 2. A atualização assíncrona foi implementada por polling automático.
 
-- Listagem de quadras esportivas disponíveis.
+## 2. Funcionalidades implementadas
+
+- Tela inicial com listagem de quadras esportivas.
 - Tela de detalhes da quadra.
-- Criação de reserva pelo cliente.
+- Tela de criação de reserva.
 - Tela "Minhas reservas".
-- Integração com backend REST Flask.
-- Atualização assíncrona por polling automático a cada 5 segundos.
-- Layout com identidade esportiva.
+- Integração com backend REST.
+- Atualização automática de reservas por polling.
+- Layout com identidade visual esportiva.
+- Geração de APK Android.
 
-## Integração REST
+## 3. Telas do aplicativo
 
-O aplicativo consome:
+### 3.1 Tela inicial
 
-- `GET /arenas`
-- `GET /courts`
-- `GET /reservations`
-- `POST /reservations`
+Apresenta o banner principal do HubArena, ícones esportivos e a listagem das quadras disponíveis.
 
-Para validação do polling:
+### 3.2 Detalhes da quadra
 
-- `PUT /reservations/{id}/accept`
-- `PUT /reservations/{id}/reject`
+Exibe modalidade esportiva, arena, preço por hora, capacidade e disponibilidade.
 
-## Atualização assíncrona
+### 3.3 Criar reserva
 
-A tela "Minhas reservas" executa polling automático em `GET /reservations` a cada 5 segundos. Quando o status da reserva é alterado no backend, o aplicativo reflete a mudança sem ação manual do usuário.
+Permite ao cliente selecionar data, horário inicial e horário final para solicitar uma reserva.
+
+### 3.4 Minhas reservas
+
+Exibe as reservas do cliente e atualiza automaticamente o status a cada 5 segundos.
+
+## 4. Integração REST
+
+O aplicativo consome os seguintes endpoints do backend:
+
+| Método | Endpoint | Função |
+|---|---|---|
+| GET | `/arenas` | Listar arenas |
+| GET | `/courts` | Listar quadras |
+| GET | `/reservations` | Listar reservas |
+| POST | `/reservations` | Criar reserva |
+
+Para validação do fluxo assíncrono via polling, os seguintes endpoints foram usados no Postman:
+
+| Método | Endpoint | Função |
+|---|---|---|
+| PUT | `/reservations/{id}/accept` | Aceitar reserva |
+| PUT | `/reservations/{id}/reject` | Recusar reserva |
+
+## 5. Atualização assíncrona
+
+A tela "Minhas reservas" executa polling automático em `GET /reservations` a cada 5 segundos.
 
 Fluxo validado:
 
-1. Cliente cria reserva pelo app.
-2. Backend registra reserva com status `PENDING`.
-3. App exibe a reserva como `PENDENTE`.
-4. Status é alterado no Postman para `ACCEPTED`.
-5. App atualiza automaticamente para `ACEITA`.
+1. Cliente cria uma reserva pelo aplicativo.
+2. Backend grava a reserva no banco com status `PENDING`.
+3. Aplicativo exibe a reserva como `PENDENTE`.
+4. Pelo Postman, o status é alterado usando `PUT /reservations/{id}/accept`.
+5. O aplicativo atualiza sozinho para `ACEITA`, sem ação manual do usuário.
 
-## Arquitetura Flutter
+## 6. Arquitetura do aplicativo Flutter
+
+A estrutura segue separação por camadas, inspirada em Clean Architecture:
 
 ```text
 lib/
@@ -65,4 +92,5 @@ lib/
 │   └── widgets/
 │       ├── court_card.dart
 │       └── status_badge.dart
-└── main.dart
+└── main.dart>> EOF
+eof
