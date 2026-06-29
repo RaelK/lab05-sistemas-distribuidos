@@ -1,4 +1,4 @@
-# HubArena - Backend REST - Sprint 1
+# HubArena
 
 ## 1. Descrição do Projeto
 
