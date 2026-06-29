@@ -1,62 +1,89 @@
-# HubArena - Documentação da Coleção Postman - Sprint 1
+# HubArena - Documentação da API REST e Coleção Postman
 
-Este diretório contém a coleção Postman utilizada para testar os endpoints REST implementados na Sprint 1 do projeto **HubArena**.
+## Versão Final - Sprint 4
 
-A coleção documenta e organiza os endpoints responsáveis por:
+Este documento descreve a coleção Postman e os principais endpoints REST implementados no projeto **HubArena** até a Sprint 4.
 
-- verificação da API;
-- verificação da conexão com o banco PostgreSQL;
-- cadastro e consulta de usuários;
-- cadastro e consulta de arenas;
-- cadastro e consulta de quadras;
-- criação e gerenciamento de reservas.
+A documentação original da Sprint 1 foi ampliada para refletir a versão final do sistema, incluindo autenticação, atualização de perfil, CRUD de arenas, CRUD de quadras, gerenciamento completo de reservas e integração assíncrona com RabbitMQ.
 
-Arquivo principal da coleção:
+---
+
+## 1. Objetivoa
+
+A coleção Postman tem como objetivo validar o funcionamento da API REST do HubArena e apoiar a demonstração do fluxo completo da aplicação distribuída.
+
+O fluxo principal validado é:
 
 ```text
-HubArena_Sprint1.postman_collection.json
+Cliente cria solicitação de reserva
+        ↓
+Backend REST valida e persiste a reserva
+        ↓
+Backend publica evento no RabbitMQ
+        ↓
+Prestador é atualizado por polling/evento
+        ↓
+Prestador aceita ou recusa a reserva
+        ↓
+Backend atualiza status e publica novo evento
+        ↓
+Cliente visualiza a atualização
 ```
 
 ---
 
-## 1. Como importar a coleção no Postman
+## 2. URL Base da API
 
-1. Abra o Postman.
-2. Clique em **Import**.
-3. Selecione o arquivo:
-
-```text
-postman/HubArena_Sprint1.postman_collection.json
-```
-
-4. Confirme a importação.
-5. Execute as requisições na ordem recomendada ao final deste documento.
-
----
-
-## 2. URL base da API
-
-A API deve estar rodando localmente em:
+A API deve estar em execução localmente em:
 
 ```text
 http://127.0.0.1:5000
 ```
 
-Antes de executar os testes no Postman, entre na pasta do backend e inicie o ambiente:
+Para o aplicativo Flutter rodando no Android Emulator, a URL equivalente é:
 
-```bash
-cd backend
-docker compose up -d
-source venv/bin/activate
-python init_db.py
-python run.py
+```text
+http://10.0.2.2:5000
 ```
 
 ---
 
-## 3. Organização dos Endpoints
+## 3. Como Executar o Backend
 
-A coleção está organizada nos seguintes grupos:
+Na pasta `backend/`:
+
+```bash
+docker compose up -d
+source .venv/Scripts/activate
+python init_db.py
+python run.py
+```
+
+Caso os containers já existam:
+
+```bash
+docker start hubarena-postgres hubarena-rabbitmq
+```
+
+---
+
+## 4. Como Executar o Consumer RabbitMQ
+
+Em outro terminal:
+
+```bash
+cd backend
+source .venv/Scripts/activate
+python -m app.messaging.reservation_consumer
+```
+
+O consumer deve permanecer em execução durante a validação da comunicação assíncrona.
+
+---
+
+## 5. Organização da Coleção Postman
+
+A coleção deve estar organizada nos seguintes grupos:
 
 ```text
 Health
@@ -64,37 +91,23 @@ Users
 Arenas
 Courts
 Reservations
+RabbitMQ / Eventos
+Fluxo Completo Sprint 4
 ```
 
 ---
 
-# 4. Health
+# 6. Health
 
-Os endpoints de Health são usados para verificar se o backend Flask está ativo e se a conexão com o PostgreSQL está funcionando corretamente.
+## 6.1 GET /health/api
 
----
-
-## 4.1 GET /health
-
-Verifica se a API está rodando.
-
-### Método
+Verifica se a API Flask está ativa.
 
 ```http
-GET
+GET http://127.0.0.1:5000/health/api
 ```
 
-### URL
-
-```http
-http://127.0.0.1:5000/health
-```
-
-### Corpo da requisição
-
-Não possui corpo.
-
-### Resposta esperada
+Resposta esperada:
 
 ```json
 {
@@ -103,7 +116,7 @@ Não possui corpo.
 }
 ```
 
-### Status HTTP esperado
+Status esperado:
 
 ```text
 200 OK
@@ -111,27 +124,15 @@ Não possui corpo.
 
 ---
 
-## 4.2 GET /health/db
+## 6.2 GET /health/db
 
-Verifica se o backend consegue se conectar ao banco PostgreSQL.
-
-### Método
+Verifica se o backend consegue se conectar ao PostgreSQL.
 
 ```http
-GET
+GET http://127.0.0.1:5000/health/db
 ```
 
-### URL
-
-```http
-http://127.0.0.1:5000/health/db
-```
-
-### Corpo da requisição
-
-Não possui corpo.
-
-### Resposta esperada
+Resposta esperada:
 
 ```json
 {
@@ -140,7 +141,7 @@ Não possui corpo.
 }
 ```
 
-### Status HTTP esperado
+Status esperado:
 
 ```text
 200 OK
@@ -148,118 +149,62 @@ Não possui corpo.
 
 ---
 
-# 5. Users
+## 6.3 GET /health/rabbitmq
 
-Os endpoints de `Users` são responsáveis pelo cadastro e consulta de usuários da plataforma.
+Verifica se o backend consegue se conectar ao RabbitMQ.
 
-O sistema possui dois perfis de usuário:
+```http
+GET http://127.0.0.1:5000/health/rabbitmq
+```
 
-| Role | Descrição |
-|---|---|
-| `CLIENT` | Cliente que solicita reservas de quadras |
-| `PROVIDER` | Prestador que cadastra arenas, gerencia quadras e aprova ou recusa reservas |
+Resposta esperada:
+
+```json
+{
+  "rabbitmq": "connected",
+  "status": "ok"
+}
+```
+
+Status esperado:
+
+```text
+200 OK
+```
 
 ---
 
-## 5.1 POST /users - Create Provider
+# 7. Users
 
-Cria um usuário do tipo prestador.
-
-O prestador representa o administrador de uma arena esportiva.
-
-### Método
+## 7.1 POST /users - Create Provider
 
 ```http
-POST
+POST http://127.0.0.1:5000/users
 ```
 
-### URL
-
-```http
-http://127.0.0.1:5000/users
-```
-
-### Headers
-
-| Chave | Valor |
-|---|---|
-| Content-Type | application/json |
-
-### Body
+Body:
 
 ```json
 {
   "name": "Arena Pampulha",
   "email": "prestador@hubarena.com",
   "password": "123456",
-  "role": "PROVIDER"
-}
-```
-
-### Campos
-
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `name` | string | Nome do prestador ou estabelecimento |
-| `email` | string | E-mail único do usuário |
-| `password` | string | Senha do usuário |
-| `role` | string | Tipo do usuário, neste caso `PROVIDER` |
-
-### Resposta esperada
-
-```json
-{
-  "id": 1,
-  "name": "Arena Pampulha",
-  "email": "prestador@hubarena.com",
   "role": "PROVIDER",
-  "createdAt": "2026-05-10T09:35:45.767610"
+  "profileType": "EMPRESA"
 }
 ```
 
-### Status HTTP esperado
-
-```text
-201 Created
-```
-
-### Possíveis erros
-
-Se o e-mail já estiver cadastrado:
-
-```json
-{
-  "error": "Já existe um usuário com este e-mail."
-}
-```
+Status esperado: `201 Created`
 
 ---
 
-## 5.2 POST /users - Create Client
-
-Cria um usuário do tipo cliente.
-
-O cliente representa o usuário final que poderá solicitar reservas de quadras.
-
-### Método
+## 7.2 POST /users - Create Client
 
 ```http
-POST
+POST http://127.0.0.1:5000/users
 ```
 
-### URL
-
-```http
-http://127.0.0.1:5000/users
-```
-
-### Headers
-
-| Chave | Valor |
-|---|---|
-| Content-Type | application/json |
-
-### Body
+Body:
 
 ```json
 {
@@ -270,961 +215,522 @@ http://127.0.0.1:5000/users
 }
 ```
 
-### Campos
+Status esperado: `201 Created`
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `name` | string | Nome do cliente |
-| `email` | string | E-mail único do usuário |
-| `password` | string | Senha do usuário |
-| `role` | string | Tipo do usuário, neste caso `CLIENT` |
+---
 
-### Resposta esperada
+## 7.3 POST /users/login - Login
+
+```http
+POST http://127.0.0.1:5000/users/login
+```
+
+Body:
 
 ```json
 {
-  "id": 2,
-  "name": "Jose Cliente",
   "email": "cliente@hubarena.com",
-  "role": "CLIENT",
-  "createdAt": "2026-05-10T09:38:49.636689"
+  "password": "123456"
 }
 ```
 
-### Status HTTP esperado
-
-```text
-201 Created
-```
+Status esperado: `200 OK`
 
 ---
 
-## 5.3 GET /users - List Users
-
-Lista todos os usuários cadastrados no sistema.
-
-### Método
+## 7.4 GET /users
 
 ```http
-GET
+GET http://127.0.0.1:5000/users
 ```
 
-### URL
-
-```http
-http://127.0.0.1:5000/users
-```
-
-### Corpo da requisição
-
-Não possui corpo.
-
-### Resposta esperada
-
-```json
-[
-  {
-    "id": 1,
-    "name": "Arena Pampulha",
-    "email": "prestador@hubarena.com",
-    "role": "PROVIDER",
-    "createdAt": "2026-05-10T09:35:45.767610"
-  },
-  {
-    "id": 2,
-    "name": "Jose Cliente",
-    "email": "cliente@hubarena.com",
-    "role": "CLIENT",
-    "createdAt": "2026-05-10T09:38:49.636689"
-  }
-]
-```
-
-### Status HTTP esperado
-
-```text
-200 OK
-```
+Status esperado: `200 OK`
 
 ---
 
-## 5.4 GET /users/{id} - Get User By ID
-
-Consulta um usuário específico pelo identificador.
-
-### Método
+## 7.5 GET /users/{id}
 
 ```http
-GET
+GET http://127.0.0.1:5000/users/1
 ```
 
-### URL
+Status esperado: `200 OK`
+
+---
+
+## 7.6 PUT /users/{id}
 
 ```http
-http://127.0.0.1:5000/users/1
+PUT http://127.0.0.1:5000/users/1
 ```
 
-### Parâmetro de rota
-
-| Parâmetro | Tipo | Descrição |
-|---|---|---|
-| `id` | integer | Identificador do usuário |
-
-### Resposta esperada
+Body:
 
 ```json
 {
-  "id": 1,
-  "name": "Arena Pampulha",
+  "name": "Arena Pampulha Esportes",
   "email": "prestador@hubarena.com",
-  "role": "PROVIDER",
-  "createdAt": "2026-05-10T09:35:45.767610"
+  "profileType": "EMPRESA"
 }
 ```
 
-### Status HTTP esperado
+Status esperado: `200 OK`
 
-```text
-200 OK
+---
+
+## 7.7 PUT /users/{id}/password
+
+```http
+PUT http://127.0.0.1:5000/users/1/password
 ```
 
-### Possível erro
-
-Se o usuário não existir:
+Body:
 
 ```json
 {
-  "error": "Usuário não encontrado."
+  "currentPassword": "123456",
+  "newPassword": "1234567"
 }
 ```
 
----
-
-# 6. Arenas
-
-Os endpoints de `Arenas` são responsáveis pelo cadastro e consulta dos estabelecimentos esportivos.
-
-Uma arena representa o local administrado por um prestador. Uma arena pode possuir várias quadras.
-
-Exemplo:
-
-```text
-HubArena Pampulha
-```
+Status esperado: `200 OK`
 
 ---
 
-## 6.1 POST /arenas - Create Arena
-
-Cria uma nova arena vinculada a um usuário do tipo `PROVIDER`.
-
-### Método
+## 7.8 PUT /users/{id}/profile-photo
 
 ```http
-POST
+PUT http://127.0.0.1:5000/users/1/profile-photo
 ```
 
-### URL
+Body:
+
+```json
+{
+  "profilePhotoUrl": "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg"
+}
+```
+
+Status esperado: `200 OK`
+
+---
+
+## 7.9 DELETE /users/{id}/profile-photo
 
 ```http
-http://127.0.0.1:5000/arenas
+DELETE http://127.0.0.1:5000/users/1/profile-photo
 ```
 
-### Headers
+Status esperado: `200 OK`
 
-| Chave | Valor |
-|---|---|
-| Content-Type | application/json |
+---
 
-### Body
+# 8. Arenas
+
+## 8.1 POST /arenas
+
+```http
+POST http://127.0.0.1:5000/arenas
+```
+
+Body:
 
 ```json
 {
   "providerId": 1,
   "name": "HubArena Pampulha",
-  "description": "Arena esportiva com quadras de futebol society e futsal.",
-  "address": "Avenida Antonio Carlos, Belo Horizonte - MG"
-}
-```
-
-### Campos
-
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `providerId` | integer | ID do usuário prestador responsável pela arena |
-| `name` | string | Nome da arena |
-| `description` | string | Descrição da arena |
-| `address` | string | Endereço da arena |
-
-### Resposta esperada
-
-```json
-{
-  "id": 1,
-  "providerId": 1,
-  "name": "HubArena Pampulha",
+  "sport": "Futebol",
   "description": "Arena esportiva com quadras de futebol society e futsal.",
   "address": "Avenida Antonio Carlos, Belo Horizonte - MG",
-  "createdAt": "2026-05-10T09:39:28.799073"
+  "imageUrl": ""
 }
 ```
 
-### Status HTTP esperado
+Se `imageUrl` estiver vazio, o backend atribui automaticamente uma imagem padrão de acordo com o esporte.
 
-```text
-201 Created
-```
-
-### Possíveis erros
-
-Se o prestador não existir:
-
-```json
-{
-  "error": "Prestador não encontrado."
-}
-```
-
-Se o usuário informado não for do tipo `PROVIDER`:
-
-```json
-{
-  "error": "A arena deve ser vinculada a um usuário do tipo PROVIDER."
-}
-```
+Status esperado: `201 Created`
 
 ---
 
-## 6.2 GET /arenas - List Arenas
-
-Lista todas as arenas cadastradas.
-
-### Método
+## 8.2 GET /arenas
 
 ```http
-GET
+GET http://127.0.0.1:5000/arenas
 ```
 
-### URL
-
-```http
-http://127.0.0.1:5000/arenas
-```
-
-### Corpo da requisição
-
-Não possui corpo.
-
-### Resposta esperada
-
-```json
-[
-  {
-    "id": 1,
-    "providerId": 1,
-    "name": "HubArena Pampulha",
-    "description": "Arena esportiva com quadras de futebol society e futsal.",
-    "address": "Avenida Antonio Carlos, Belo Horizonte - MG",
-    "createdAt": "2026-05-10T09:39:28.799073"
-  }
-]
-```
-
-### Status HTTP esperado
-
-```text
-200 OK
-```
+Status esperado: `200 OK`
 
 ---
 
-## 6.3 GET /arenas/{id} - Get Arena By ID
-
-Consulta uma arena específica pelo identificador.
-
-### Método
+## 8.3 GET /arenas/{id}
 
 ```http
-GET
+GET http://127.0.0.1:5000/arenas/1
 ```
 
-### URL
+Status esperado: `200 OK`
+
+---
+
+## 8.4 PUT /arenas/{id}
 
 ```http
-http://127.0.0.1:5000/arenas/1
+PUT http://127.0.0.1:5000/arenas/1
 ```
 
-### Parâmetro de rota
-
-| Parâmetro | Tipo | Descrição |
-|---|---|---|
-| `id` | integer | Identificador da arena |
-
-### Resposta esperada
+Body:
 
 ```json
 {
-  "id": 1,
-  "providerId": 1,
-  "name": "HubArena Pampulha",
-  "description": "Arena esportiva com quadras de futebol society e futsal.",
-  "address": "Avenida Antonio Carlos, Belo Horizonte - MG",
-  "createdAt": "2026-05-10T09:39:28.799073"
+  "name": "HubArena Pampulha Premium",
+  "sport": "Futebol",
+  "description": "Arena atualizada com quadras de futebol.",
+  "address": "Belo Horizonte - MG",
+  "imageUrl": "https://images.pexels.com/photos/274422/pexels-photo-274422.jpeg"
 }
 ```
 
-### Status HTTP esperado
-
-```text
-200 OK
-```
-
-### Possível erro
-
-Se a arena não existir:
-
-```json
-{
-  "error": "Arena não encontrada."
-}
-```
+Status esperado: `200 OK`
 
 ---
 
-# 7. Courts
+## 8.5 DELETE /arenas/{id}
 
-Os endpoints de `Courts` são responsáveis pelo cadastro e consulta das quadras esportivas.
-
-No domínio do HubArena, `Court` representa uma quadra pertencente a uma arena.
-
-Exemplo:
-
-```text
-Arena: HubArena Pampulha
-
-Quadras:
-- Quadra de Futebol Society
-- Quadra de Futsal
-- Quadra de Vôlei
-- Quadra de Tênis
+```http
+DELETE http://127.0.0.1:5000/arenas/1
 ```
+
+Status esperado: `200 OK`
 
 ---
 
-## 7.1 POST /courts - Create Court
+# 9. Courts
 
-Cria uma nova quadra vinculada a uma arena.
-
-### Método
+## 9.1 POST /courts
 
 ```http
-POST
+POST http://127.0.0.1:5000/courts
 ```
 
-### URL
-
-```http
-http://127.0.0.1:5000/courts
-```
-
-### Headers
-
-| Chave | Valor |
-|---|---|
-| Content-Type | application/json |
-
-### Body
+Body:
 
 ```json
 {
   "arenaId": 1,
-  "sport": "Futebol Society",
-  "priceHour": 120.0,
-  "capacity": 10,
-  "available": true
-}
-```
-
-### Campos
-
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `arenaId` | integer | ID da arena à qual a quadra pertence |
-| `sport` | string | Modalidade esportiva da quadra |
-| `priceHour` | float | Preço por hora de utilização |
-| `capacity` | integer | Capacidade de jogadores ou usuários |
-| `available` | boolean | Indica se a quadra está disponível |
-
-### Resposta esperada
-
-```json
-{
-  "id": 1,
-  "arenaId": 1,
-  "sport": "Futebol Society",
+  "name": "Quadra Society 1",
+  "sport": "Futebol",
+  "description": "Quadra society com grama sintética.",
   "priceHour": 120.0,
   "capacity": 10,
   "available": true,
-  "createdAt": "2026-05-10T09:39:39.673655"
+  "imageUrl": ""
 }
 ```
 
-### Status HTTP esperado
+Se `imageUrl` estiver vazio, o backend atribui automaticamente uma imagem padrão de acordo com o esporte.
 
-```text
-201 Created
-```
-
-### Possíveis erros
-
-Se a arena não existir:
-
-```json
-{
-  "error": "Arena não encontrada."
-}
-```
-
-Se o valor por hora for inválido:
-
-```json
-{
-  "error": "O valor por hora deve ser maior que zero."
-}
-```
-
-Se a capacidade for inválida:
-
-```json
-{
-  "error": "A capacidade deve ser maior que zero."
-}
-```
+Status esperado: `201 Created`
 
 ---
 
-## 7.2 GET /courts - List Courts
-
-Lista todas as quadras cadastradas.
-
-### Método
+## 9.2 GET /courts
 
 ```http
-GET
+GET http://127.0.0.1:5000/courts
 ```
 
-### URL
-
-```http
-http://127.0.0.1:5000/courts
-```
-
-### Corpo da requisição
-
-Não possui corpo.
-
-### Resposta esperada
-
-```json
-[
-  {
-    "id": 1,
-    "arenaId": 1,
-    "sport": "Futebol Society",
-    "priceHour": 120.0,
-    "capacity": 10,
-    "available": true,
-    "createdAt": "2026-05-10T09:39:39.673655"
-  }
-]
-```
-
-### Status HTTP esperado
-
-```text
-200 OK
-```
+Status esperado: `200 OK`
 
 ---
 
-## 7.3 GET /courts/{id} - Get Court By ID
-
-Consulta uma quadra específica pelo identificador.
-
-### Método
+## 9.3 GET /courts/{id}
 
 ```http
-GET
+GET http://127.0.0.1:5000/courts/1
 ```
 
-### URL
+Status esperado: `200 OK`
+
+---
+
+## 9.4 PUT /courts/{id}
 
 ```http
-http://127.0.0.1:5000/courts/1
+PUT http://127.0.0.1:5000/courts/1
 ```
 
-### Parâmetro de rota
-
-| Parâmetro | Tipo | Descrição |
-|---|---|---|
-| `id` | integer | Identificador da quadra |
-
-### Resposta esperada
+Body:
 
 ```json
 {
-  "id": 1,
-  "arenaId": 1,
-  "sport": "Futebol Society",
-  "priceHour": 120.0,
-  "capacity": 10,
+  "name": "Quadra Society Premium",
+  "sport": "Futebol",
+  "description": "Quadra atualizada.",
+  "priceHour": 150.0,
+  "capacity": 12,
   "available": true,
-  "createdAt": "2026-05-10T09:39:39.673655"
+  "imageUrl": "https://images.pexels.com/photos/399187/pexels-photo-399187.jpeg"
 }
 ```
 
-### Status HTTP esperado
-
-```text
-200 OK
-```
-
-### Possível erro
-
-Se a quadra não existir:
-
-```json
-{
-  "error": "Quadra não encontrada."
-}
-```
+Status esperado: `200 OK`
 
 ---
 
-# 8. Reservations
+## 9.5 DELETE /courts/{id}
 
-Os endpoints de `Reservations` são responsáveis pelo fluxo principal de reserva de quadras.
+```http
+DELETE http://127.0.0.1:5000/courts/1
+```
 
-Uma reserva é criada por um cliente para uma quadra específica. Inicialmente, a reserva é criada com status `PENDING`. Em seguida, o prestador pode aceitar ou recusar a solicitação.
+Status esperado: `200 OK`
 
-Status utilizados na Sprint 1:
+---
+
+# 10. Reservations
+
+Status utilizados:
 
 | Status | Descrição |
 |---|---|
-| `PENDING` | Reserva criada e aguardando decisão do prestador |
+| `PENDING` | Reserva criada e aguardando resposta do prestador |
 | `ACCEPTED` | Reserva aceita pelo prestador |
 | `REJECTED` | Reserva recusada pelo prestador |
+| `CANCELLED` | Reserva cancelada pelo cliente |
+| `FINISHED` | Reserva finalizada pelo prestador |
 
----
-
-## 8.1 POST /reservations - Create Reservation
-
-Cria uma nova solicitação de reserva.
-
-### Método
+## 10.1 POST /reservations
 
 ```http
-POST
+POST http://127.0.0.1:5000/reservations
 ```
 
-### URL
-
-```http
-http://127.0.0.1:5000/reservations
-```
-
-### Headers
-
-| Chave | Valor |
-|---|---|
-| Content-Type | application/json |
-
-### Body
+Body:
 
 ```json
 {
   "clientId": 2,
   "courtId": 1,
-  "date": "2026-05-15",
+  "date": "2026-07-01",
   "startTime": "19:00",
   "endTime": "20:00"
 }
 ```
 
-### Campos
+Ao criar a reserva, o backend publica o evento `reservation.created` no RabbitMQ.
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `clientId` | integer | ID do usuário cliente |
-| `courtId` | integer | ID da quadra reservada |
-| `date` | string | Data da reserva no formato `YYYY-MM-DD` |
-| `startTime` | string | Horário inicial no formato `HH:MM` |
-| `endTime` | string | Horário final no formato `HH:MM` |
-
-### Resposta esperada
-
-```json
-{
-  "id": 1,
-  "clientId": 2,
-  "courtId": 1,
-  "date": "2026-05-15",
-  "startTime": "19:00",
-  "endTime": "20:00",
-  "status": "PENDING",
-  "createdAt": "2026-05-10T09:39:50.110297",
-  "updatedAt": "2026-05-10T09:39:50.110297"
-}
-```
-
-### Status HTTP esperado
-
-```text
-201 Created
-```
-
-### Possíveis erros
-
-Se o cliente não existir:
-
-```json
-{
-  "error": "Cliente não encontrado."
-}
-```
-
-Se o usuário informado não for do tipo `CLIENT`:
-
-```json
-{
-  "error": "A reserva deve ser vinculada a um usuário do tipo CLIENT."
-}
-```
-
-Se a quadra não existir:
-
-```json
-{
-  "error": "Quadra não encontrada."
-}
-```
-
-Se o horário for inválido:
-
-```json
-{
-  "error": "O horário inicial deve ser menor que o horário final."
-}
-```
-
-Se já existir reserva no mesmo intervalo:
-
-```json
-{
-  "error": "Já existe uma reserva para esta quadra nesse intervalo."
-}
-```
+Status esperado: `201 Created`
 
 ---
 
-## 8.2 GET /reservations - List Reservations
-
-Lista todas as reservas cadastradas.
-
-### Método
+## 10.2 GET /reservations
 
 ```http
-GET
+GET http://127.0.0.1:5000/reservations
 ```
 
-### URL
+Status esperado: `200 OK`
+
+---
+
+## 10.3 GET /reservations/{id}
 
 ```http
-http://127.0.0.1:5000/reservations
+GET http://127.0.0.1:5000/reservations/1
 ```
 
-### Corpo da requisição
+Status esperado: `200 OK`
 
-Não possui corpo.
+---
 
-### Resposta esperada
+## 10.4 GET /reservations/client/{client_id}
+
+```http
+GET http://127.0.0.1:5000/reservations/client/2
+```
+
+Status esperado: `200 OK`
+
+---
+
+## 10.5 GET /reservations/provider/{provider_id}
+
+```http
+GET http://127.0.0.1:5000/reservations/provider/1
+```
+
+Status esperado: `200 OK`
+
+---
+
+## 10.6 GET /reservations/status/{status}
+
+```http
+GET http://127.0.0.1:5000/reservations/status/PENDING
+```
+
+Status esperado: `200 OK`
+
+---
+
+## 10.7 PUT /reservations/{id}/accept
+
+```http
+PUT http://127.0.0.1:5000/reservations/1/accept
+```
+
+Ao aceitar, o backend publica o evento `reservation.status_changed`.
+
+Status esperado: `200 OK`
+
+---
+
+## 10.8 PUT /reservations/{id}/reject
+
+```http
+PUT http://127.0.0.1:5000/reservations/1/reject
+```
+
+Ao recusar, o backend publica o evento `reservation.status_changed`.
+
+Status esperado: `200 OK`
+
+---
+
+## 10.9 PUT /reservations/{id}/cancel
+
+```http
+PUT http://127.0.0.1:5000/reservations/1/cancel
+```
+
+Ao cancelar, o backend publica o evento `reservation.cancelled`.
+
+Status esperado: `200 OK`
+
+---
+
+## 10.10 PUT /reservations/{id}/finish
+
+```http
+PUT http://127.0.0.1:5000/reservations/1/finish
+```
+
+Ao finalizar, o backend publica o evento `reservation.finished`.
+
+Status esperado: `200 OK`
+
+---
+
+# 11. Eventos RabbitMQ
+
+A comunicação assíncrona é demonstrada por meio da publicação de eventos no RabbitMQ.
+
+| Evento | Quando ocorre |
+|---|---|
+| `reservation.created` | Quando o cliente cria uma reserva |
+| `reservation.status_changed` | Quando o prestador aceita ou recusa |
+| `reservation.cancelled` | Quando o cliente cancela |
+| `reservation.finished` | Quando o prestador finaliza |
+
+Com o consumer executando:
+
+```bash
+python -m app.messaging.reservation_consumer
+```
+
+Ao criar uma reserva, deve aparecer no terminal um evento semelhante a:
 
 ```json
-[
-  {
-    "id": 1,
+{
+  "event": "reservation.created",
+  "producer": "hubarena-backend",
+  "payload": {
+    "reservationId": 1,
     "clientId": 2,
     "courtId": 1,
-    "date": "2026-05-15",
-    "startTime": "19:00",
-    "endTime": "20:00",
-    "status": "ACCEPTED",
-    "createdAt": "2026-05-10T09:39:50.110297",
-    "updatedAt": "2026-05-10T09:40:00.808084"
+    "status": "PENDING"
   }
-]
-```
-
-### Status HTTP esperado
-
-```text
-200 OK
-```
-
----
-
-## 8.3 GET /reservations/{id} - Get Reservation By ID
-
-Consulta uma reserva específica pelo identificador.
-
-### Método
-
-```http
-GET
-```
-
-### URL
-
-```http
-http://127.0.0.1:5000/reservations/1
-```
-
-### Parâmetro de rota
-
-| Parâmetro | Tipo | Descrição |
-|---|---|---|
-| `id` | integer | Identificador da reserva |
-
-### Resposta esperada
-
-```json
-{
-  "id": 1,
-  "clientId": 2,
-  "courtId": 1,
-  "date": "2026-05-15",
-  "startTime": "19:00",
-  "endTime": "20:00",
-  "status": "ACCEPTED",
-  "createdAt": "2026-05-10T09:39:50.110297",
-  "updatedAt": "2026-05-10T09:40:00.808084"
 }
 ```
 
-### Status HTTP esperado
-
-```text
-200 OK
-```
-
-### Possível erro
-
-Se a reserva não existir:
+Após o aceite da reserva:
 
 ```json
 {
-  "error": "Reserva não encontrada."
+  "event": "reservation.status_changed",
+  "producer": "hubarena-backend",
+  "payload": {
+    "reservationId": 1,
+    "status": "ACCEPTED"
+  }
 }
 ```
 
 ---
 
-## 8.4 PUT /reservations/{id}/accept - Accept Reservation
+# 12. Ordem recomendada para teste no Postman
 
-Atualiza o status de uma reserva pendente para `ACCEPTED`.
-
-### Método
-
-```http
-PUT
-```
-
-### URL
-
-```http
-http://127.0.0.1:5000/reservations/1/accept
-```
-
-### Parâmetro de rota
-
-| Parâmetro | Tipo | Descrição |
-|---|---|---|
-| `id` | integer | Identificador da reserva |
-
-### Corpo da requisição
-
-Não possui corpo.
-
-### Resposta esperada
-
-```json
-{
-  "id": 1,
-  "clientId": 2,
-  "courtId": 1,
-  "date": "2026-05-15",
-  "startTime": "19:00",
-  "endTime": "20:00",
-  "status": "ACCEPTED",
-  "createdAt": "2026-05-10T09:39:50.110297",
-  "updatedAt": "2026-05-10T09:40:00.808084"
-}
-```
-
-### Status HTTP esperado
-
-```text
-200 OK
-```
-
-### Possíveis erros
-
-Se a reserva não existir:
-
-```json
-{
-  "error": "Reserva não encontrada."
-}
-```
-
-Se a reserva não estiver pendente:
-
-```json
-{
-  "error": "Somente reservas pendentes podem ser aceitas."
-}
-```
-
----
-
-## 8.5 PUT /reservations/{id}/reject - Reject Reservation
-
-Atualiza o status de uma reserva pendente para `REJECTED`.
-
-### Método
-
-```http
-PUT
-```
-
-### URL
-
-```http
-http://127.0.0.1:5000/reservations/1/reject
-```
-
-### Parâmetro de rota
-
-| Parâmetro | Tipo | Descrição |
-|---|---|---|
-| `id` | integer | Identificador da reserva |
-
-### Corpo da requisição
-
-Não possui corpo.
-
-### Resposta esperada
-
-```json
-{
-  "id": 1,
-  "clientId": 2,
-  "courtId": 1,
-  "date": "2026-05-15",
-  "startTime": "19:00",
-  "endTime": "20:00",
-  "status": "REJECTED",
-  "createdAt": "2026-05-10T09:39:50.110297",
-  "updatedAt": "2026-05-10T09:40:00.808084"
-}
-```
-
-### Status HTTP esperado
-
-```text
-200 OK
-```
-
-### Possíveis erros
-
-Se a reserva não existir:
-
-```json
-{
-  "error": "Reserva não encontrada."
-}
-```
-
-Se a reserva não estiver pendente:
-
-```json
-{
-  "error": "Somente reservas pendentes podem ser recusadas."
-}
-```
-
----
-
-# 9. Ordem recomendada de execução
-
-Para evitar erros de chave estrangeira, execute as requisições nesta ordem:
-
-1. `GET /health`
+1. `GET /health/api`
 2. `GET /health/db`
-3. `POST /users` criando um `PROVIDER`
-4. `POST /users` criando um `CLIENT`
-5. `GET /users`
-6. `GET /users/{id}`
+3. `GET /health/rabbitmq`
+4. `POST /users` criando um `PROVIDER`
+5. `POST /users` criando um `CLIENT`
+6. `POST /users/login`
 7. `POST /arenas`
 8. `GET /arenas`
-9. `GET /arenas/{id}`
-10. `POST /courts`
-11. `GET /courts`
-12. `GET /courts/{id}`
-13. `POST /reservations`
-14. `GET /reservations`
-15. `GET /reservations/{id}`
-16. `PUT /reservations/{id}/accept` ou `PUT /reservations/{id}/reject`
+9. `POST /courts`
+10. `GET /courts`
+11. `POST /reservations`
+12. Verificar evento `reservation.created` no consumer
+13. `GET /reservations/provider/{provider_id}`
+14. `PUT /reservations/{id}/accept`
+15. Verificar evento `reservation.status_changed` no consumer
+16. `GET /reservations/client/{client_id}`
+17. `PUT /reservations/{id}/finish`
+18. Verificar evento `reservation.finished` no consumer
 
 ---
 
-# 10. Observações importantes
-
-- Se um e-mail já existir, o endpoint `POST /users` retornará erro informando que já existe um usuário com este e-mail.
-- Para repetir os testes do zero, pode-se recriar o banco ou usar e-mails diferentes.
-- O endpoint `POST /reservations` valida conflito de horário para evitar duas reservas na mesma quadra e no mesmo intervalo.
-- O script `backend/scripts/api_smoke_test.py` também executa automaticamente o fluxo principal da API.
-- O relatório gerado pelo teste automatizado está em:
-
-```text
-backend/docs/api_test_results.md
-```
-
-- A cópia consolidada do relatório da Sprint 1 está em:
-
-```text
-docs/sprint1/api_test_results.md
-```
-
----
-
-# 11. Relação dos endpoints da Sprint 1
+# 13. Relação consolidada dos endpoints
 
 | Grupo | Método | Endpoint | Descrição |
 |---|---|---|---|
-| Health | GET | `/health` | Verifica se a API está ativa |
-| Health | GET | `/health/db` | Verifica conexão com PostgreSQL |
-| Users | POST | `/users` | Cria cliente ou prestador |
+| Health | GET | `/health/api` | Verifica se a API está ativa |
+| Health | GET | `/health/db` | Verifica PostgreSQL |
+| Health | GET | `/health/rabbitmq` | Verifica RabbitMQ |
+| Users | POST | `/users` | Cria usuário |
+| Users | POST | `/users/login` | Login |
 | Users | GET | `/users` | Lista usuários |
-| Users | GET | `/users/{id}` | Consulta usuário por ID |
+| Users | GET | `/users/{id}` | Consulta usuário |
+| Users | PUT | `/users/{id}` | Atualiza perfil |
+| Users | PUT | `/users/{id}/password` | Atualiza senha |
+| Users | PUT | `/users/{id}/profile-photo` | Atualiza foto |
+| Users | DELETE | `/users/{id}/profile-photo` | Remove foto |
 | Arenas | POST | `/arenas` | Cria arena |
 | Arenas | GET | `/arenas` | Lista arenas |
-| Arenas | GET | `/arenas/{id}` | Consulta arena por ID |
+| Arenas | GET | `/arenas/{id}` | Consulta arena |
+| Arenas | PUT | `/arenas/{id}` | Atualiza arena |
+| Arenas | DELETE | `/arenas/{id}` | Exclui arena |
 | Courts | POST | `/courts` | Cria quadra |
 | Courts | GET | `/courts` | Lista quadras |
-| Courts | GET | `/courts/{id}` | Consulta quadra por ID |
+| Courts | GET | `/courts/{id}` | Consulta quadra |
+| Courts | PUT | `/courts/{id}` | Atualiza quadra |
+| Courts | DELETE | `/courts/{id}` | Exclui quadra |
 | Reservations | POST | `/reservations` | Cria reserva |
 | Reservations | GET | `/reservations` | Lista reservas |
-| Reservations | GET | `/reservations/{id}` | Consulta reserva por ID |
-| Reservations | PUT | `/reservations/{id}/accept` | Aceita reserva pendente |
-| Reservations | PUT | `/reservations/{id}/reject` | Recusa reserva pendente |
+| Reservations | GET | `/reservations/{id}` | Consulta reserva |
+| Reservations | GET | `/reservations/client/{client_id}` | Reservas do cliente |
+| Reservations | GET | `/reservations/provider/{provider_id}` | Reservas do prestador |
+| Reservations | GET | `/reservations/status/{status}` | Reservas por status |
+| Reservations | PUT | `/reservations/{id}/accept` | Aceita reserva |
+| Reservations | PUT | `/reservations/{id}/reject` | Recusa reserva |
+| Reservations | PUT | `/reservations/{id}/cancel` | Cancela reserva |
+| Reservations | PUT | `/reservations/{id}/finish` | Finaliza reserva |
+
+---
+
+# 14. Observações finais
+
+Esta documentação representa a versão final da API REST do HubArena até a Sprint 4.
+
+A comunicação assíncrona deve ser validada com o RabbitMQ e o consumer em execução. A evidência principal para a avaliação consiste em demonstrar que, ao criar uma reserva, o backend publica um evento e o prestador recebe a atualização sem precisar atualizar manualmente a tela.
