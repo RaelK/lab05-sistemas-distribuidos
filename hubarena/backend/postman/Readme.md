@@ -1,7 +1,5 @@
 # HubArena - Documentação da API REST e Coleção Postman
 
-## Versão Final - Sprint 4
-
 Este documento descreve a coleção Postman e os principais endpoints REST implementados no projeto **HubArena** até a Sprint 4.
 
 A documentação original da Sprint 1 foi ampliada para refletir a versão final do sistema, incluindo autenticação, atualização de perfil, CRUD de arenas, CRUD de quadras, gerenciamento completo de reservas e integração assíncrona com RabbitMQ.
