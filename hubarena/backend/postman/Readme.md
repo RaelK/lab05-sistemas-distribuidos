@@ -6,7 +6,7 @@ A documentação original da Sprint 1 foi ampliada para refletir a versão final
 
 ---
 
-## 1. Objetivoa
+## 1. Objetivos
 
 A coleção Postman tem como objetivo validar o funcionamento da API REST do HubArena e apoiar a demonstração do fluxo completo da aplicação distribuída.
 
