@@ -34,3 +34,27 @@ def get_court(court_id):
 
     except LookupError as error:
         return jsonify({"error": str(error)}), 404
+
+
+def update_court(court_id):
+    try:
+        data = request.get_json()
+        court = CourtService.update_court(court_id, data)
+
+        return jsonify(court.to_dict()), 200
+
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+
+    except LookupError as error:
+        return jsonify({"error": str(error)}), 404
+
+def delete_court(court_id):
+    try:
+        CourtService.delete_court(court_id)
+
+        return jsonify({"message": "Quadra excluída com sucesso."}), 200
+
+    except LookupError as error:
+        return jsonify({"error": str(error)}), 404
+

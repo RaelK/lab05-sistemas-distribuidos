@@ -131,3 +131,91 @@ class ReservationService:
         )
 
         return updated_reservation
+
+    @staticmethod
+    def list_by_client(client_id):
+        client = UserRepository.get_by_id(client_id)
+
+        if not client:
+            raise LookupError("Cliente não encontrado.")
+
+        if client.role != "CLIENT":
+            raise ValueError("O usuário informado não possui perfil CLIENT.")
+
+        return ReservationRepository.get_by_client_id(client_id)
+
+
+
+    @staticmethod
+    def list_by_provider(provider_id):
+        provider = UserRepository.get_by_id(provider_id)
+
+        if not provider:
+            raise LookupError("Prestador não encontrado.")
+
+        if provider.role != "PROVIDER":
+            raise ValueError("O usuário informado não possui perfil PROVIDER.")
+
+        return ReservationRepository.get_by_provider_id(provider_id)
+
+    @staticmethod
+    def list_by_status(status):
+        valid_statuses = ["PENDING", "ACCEPTED", "REJECTED", "CANCELLED", "FINISHED"]
+
+        normalized_status = status.upper()
+
+        if normalized_status not in valid_statuses:
+            raise ValueError("Status inválido.")
+
+        return ReservationRepository.get_by_status(normalized_status)
+
+    @staticmethod
+    def cancel_reservation(reservation_id):
+        reservation = ReservationService.get_reservation(reservation_id)
+
+        if reservation.status != "PENDING":
+            raise ValueError("Somente reservas pendentes podem ser canceladas.")
+
+        previous_status = reservation.status
+
+        updated_reservation = ReservationRepository.update_status(
+            reservation,
+            "CANCELLED"
+        )
+
+        EventPublisher.publish(
+            event_name="reservation.cancelled",
+            payload={
+                "reservation": updated_reservation.to_dict(),
+                "previousStatus": previous_status,
+                "newStatus": "CANCELLED"
+            }
+        )
+
+        return updated_reservation
+
+    @staticmethod
+    def finish_reservation(reservation_id):
+        reservation = ReservationService.get_reservation(reservation_id)
+
+        if reservation.status != "ACCEPTED":
+            raise ValueError("Somente reservas aceitas podem ser finalizadas.")
+
+        previous_status = reservation.status
+
+        updated_reservation = ReservationRepository.update_status(
+            reservation,
+            "FINISHED"
+        )
+
+        EventPublisher.publish(
+            event_name="reservation.finished",
+            payload={
+                "reservation": updated_reservation.to_dict(),
+                "previousStatus": previous_status,
+                "newStatus": "FINISHED"
+            }
+        )
+
+        return updated_reservation
+

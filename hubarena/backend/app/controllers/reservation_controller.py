@@ -60,3 +60,67 @@ def reject_reservation(reservation_id):
 
     except LookupError as error:
         return jsonify({"error": str(error)}), 404
+
+def list_reservations_by_client(client_id):
+    try:
+        reservations = ReservationService.list_by_client(client_id)
+
+        return jsonify([reservation.to_dict() for reservation in reservations]), 200
+
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+
+    except LookupError as error:
+        return jsonify({"error": str(error)}), 404
+
+
+
+
+def list_reservations_by_provider(provider_id):
+    try:
+        reservations = ReservationService.list_by_provider(provider_id)
+
+        return jsonify([reservation.to_dict() for reservation in reservations]), 200
+
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+
+    except LookupError as error:
+        return jsonify({"error": str(error)}), 404
+
+
+def list_reservations_by_status(status):
+    try:
+        reservations = ReservationService.list_by_status(status)
+
+        return jsonify([reservation.to_dict() for reservation in reservations]), 200
+
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+
+
+def cancel_reservation(reservation_id):
+    try:
+        reservation = ReservationService.cancel_reservation(reservation_id)
+
+        return jsonify(reservation.to_dict()), 200
+
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+
+    except LookupError as error:
+        return jsonify({"error": str(error)}), 404
+
+
+def finish_reservation(reservation_id):
+    try:
+        reservation = ReservationService.finish_reservation(reservation_id)
+
+        return jsonify(reservation.to_dict()), 200
+
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+
+    except LookupError as error:
+        return jsonify({"error": str(error)}), 404
+

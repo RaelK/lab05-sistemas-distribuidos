@@ -34,3 +34,27 @@ def get_arena(arena_id):
 
     except LookupError as error:
         return jsonify({"error": str(error)}), 404
+
+
+def update_arena(arena_id):
+    try:
+        data = request.get_json()
+        arena = ArenaService.update_arena(arena_id, data)
+
+        return jsonify(arena.to_dict()), 200
+
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+
+    except LookupError as error:
+        return jsonify({"error": str(error)}), 404
+
+def delete_arena(arena_id):
+    try:
+        ArenaService.delete_arena(arena_id)
+
+        return jsonify({"message": "Arena excluída com sucesso."}), 200
+
+    except LookupError as error:
+        return jsonify({"error": str(error)}), 404
+

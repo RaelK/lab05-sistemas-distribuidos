@@ -12,6 +12,9 @@ class User(db.Model):
     password = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), nullable=False)
 
+    profile_photo_url = db.Column(db.String(500), nullable=True)
+    profile_type = db.Column(db.String(40), nullable=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     arenas = db.relationship(
@@ -32,5 +35,7 @@ class User(db.Model):
             "name": self.name,
             "email": self.email,
             "role": self.role,
+            "profilePhotoUrl": self.profile_photo_url,
+            "profileType": self.profile_type,
             "createdAt": self.created_at.isoformat() if self.created_at else None
         }
