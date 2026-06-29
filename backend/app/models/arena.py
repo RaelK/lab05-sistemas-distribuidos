@@ -14,8 +14,10 @@ class Arena(db.Model):
     )
 
     name = db.Column(db.String(120), nullable=False)
+    sport = db.Column(db.String(80), nullable=True)
     description = db.Column(db.Text, nullable=True)
     address = db.Column(db.String(255), nullable=False)
+    image_url = db.Column(db.String(700), nullable=True)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -32,7 +34,9 @@ class Arena(db.Model):
             "id": self.id,
             "providerId": self.provider_id,
             "name": self.name,
+            "sport": self.sport,
             "description": self.description,
             "address": self.address,
+            "imageUrl": self.image_url,
             "createdAt": self.created_at.isoformat() if self.created_at else None
         }

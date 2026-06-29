@@ -1,192 +1,455 @@
-# HubArena
-
-> **Projeto:** HubArena  
-> **Disciplina:** Laboratório de Desenvolvimento de Aplicações Móveis e Distribuídas  
-> **Organização:** Projeto estruturado para quatro sprints  
----
+# HubArena - Backend REST e Integração das Sprints 1 a 4
 
 ## 1. Descrição do Projeto
 
-O **HubArena** é uma plataforma distribuída para reserva de quadras esportivas, conectando clientes interessados em reservar espaços esportivos com prestadores responsáveis por arenas, quadras e horários disponíveis.
+O **HubArena** é uma plataforma distribuída para reserva e gestão de quadras esportivas. O sistema conecta clientes interessados em reservar espaços esportivos com prestadores responsáveis por arenas, quadras e horários disponíveis.
 
-O projeto foi organizado para evoluir progressivamente ao longo das quatro sprints da disciplina, contemplando backend REST, banco de dados, middleware orientado a mensagens e aplicativos móveis em Flutter.
+O projeto foi desenvolvido progressivamente ao longo de quatro sprints:
+
+- **Sprint 1:** backend REST com persistência em PostgreSQL.
+- **Sprint 2:** integração assíncrona com RabbitMQ.
+- **Sprint 3:** aplicativo Flutter para o cliente e integração REST.
+- **Sprint 4:** aplicativo do prestador, integração final, notificações, gerenciamento de arenas/quadras e fluxo completo ponta a ponta.
 
 ---
 
-## 2. Estrutura do Repositório
+## 2. Perfis de Usuário
 
-> **Organização geral**
->
-> A pasta `hubarena/` concentra todo o projeto, separando backend, documentação, coleção Postman e futuras aplicações móveis.
+### Cliente
 
-```text
-hubarena/
-├── backend/
-├── mobile/
-│   ├── cliente/
-│   └── prestador/
-├── docs/
-│   ├── sprint1/
-│   ├── sprint2/
-│   ├── sprint3/
-│   └── sprint4/
-├── postman/
-├── README.md
-└── .gitignore
-```
+Usuário consumidor da plataforma. Pode pesquisar arenas, visualizar quadras, criar reservas, acompanhar atualizações, cancelar reservas pendentes, consultar histórico e gerenciar seu perfil.
 
-### 2.1 Descrição das pastas
+### Prestador
 
-| Pasta | Descrição |
+Usuário ou empresa responsável por arenas esportivas. Pode cadastrar arenas, cadastrar quadras, aceitar ou recusar solicitações, finalizar reservas, acompanhar notificações e gerenciar seu perfil.
+
+---
+
+## 3. Tecnologias Utilizadas
+
+| Categoria | Tecnologias |
 |---|---|
-| `backend/` | Contém o backend REST implementado em Flask |
-| `mobile/cliente/` | Espaço reservado para o app Flutter do cliente |
-| `mobile/prestador/` | Espaço reservado para o app Flutter do prestador |
-| `docs/sprint1/` | Documentação consolidada da Sprint 1 |
-| `docs/sprint2/` | Espaço reservado para documentação da integração com MOM |
-| `docs/sprint3/` | Espaço reservado para documentação do app cliente |
-| `docs/sprint4/` | Espaço reservado para relatório final, screencast e evidências |
-| `postman/` | Coleção Postman consolidada dos endpoints da Sprint 1 |
+| Backend | Python, Flask, Flask-SQLAlchemy, Flask-CORS |
+| Banco de dados | PostgreSQL |
+| Mensageria | RabbitMQ |
+| Mobile | Flutter, Dart |
+| Ambiente | Docker Compose, Git Bash, Android Emulator |
+| Testes | Postman, flutter analyze, flutter test |
+| Documentação | Markdown, PlantUML |
 
 ---
 
-## 3. Sprint 1 - Arquitetura e Backend REST
+## 4. Arquitetura Geral
 
-A Sprint 1 implementa:
-
-- proposta de domínio;
-- diagrama de arquitetura;
-- backend REST em Flask;
-- banco PostgreSQL;
-- schema documentado;
-- coleção Postman;
-- testes automatizados dos endpoints.
-
-> **Resumo da Sprint 1**
->
-> A primeira sprint estabelece a base técnica do HubArena, com backend funcional, persistência em banco de dados, documentação arquitetural e coleção de testes.
-
----
-
-## 4. Backend
-
-> **Localização do backend**
->
-> O backend REST da aplicação está localizado na pasta:
+O sistema foi organizado em componentes independentes:
 
 ```text
-backend/
-```
-
-O backend contém:
-
-- API Flask;
-- modelos SQLAlchemy;
-- rotas REST;
-- controllers;
-- services;
-- repositories;
-- configuração do PostgreSQL;
-- scripts de documentação e testes;
-- coleção Postman local;
-- documentação técnica.
-
----
-
-## 5. Como Executar o Backend
-
-> **Passo a passo**
->
-> Os comandos abaixo devem ser executados a partir da pasta raiz `hubarena/`.
-
-### 5.1 Entrar na pasta do backend
-
-```bash
-cd backend
+Flutter App Unificado
+Cliente / Prestador
+        |
+        | REST HTTP
+        v
+Backend Flask
+Routes -> Controllers -> Services -> Repositories -> Models
+        |
+        | SQLAlchemy
+        v
+PostgreSQL
+        |
+        | Eventos
+        v
+RabbitMQ
+Consumer de Reservas
 ```
 
 ---
 
-### 5.2 Subir o PostgreSQL
+## 5. Arquitetura do Backend
+
+O backend foi organizado em camadas, seguindo separação de responsabilidades.
+
+| Camada | Responsabilidade |
+|---|---|
+| routes | Define as rotas REST |
+| controllers | Recebe requisições HTTP e retorna respostas JSON |
+| services | Concentra regras de negócio |
+| repositories | Acessa o banco de dados |
+| models | Define as entidades persistidas |
+| database | Configura o SQLAlchemy |
+| config | Centraliza configurações da aplicação |
+| messaging | Publica e consome eventos RabbitMQ |
+
+---
+
+## 6. Componentes Arquiteturais
+
+| Componente | Tecnologia | Função |
+|---|---|---|
+| App Flutter Unificado | Flutter/Dart | Interface cliente e prestador |
+| Backend REST | Flask/Python | Expor endpoints e regras de negócio |
+| Banco de Dados | PostgreSQL | Persistir dados do domínio |
+| MOM | RabbitMQ | Comunicação assíncrona por eventos |
+| Postman | Postman | Testes e validação dos endpoints |
+
+---
+
+## 7. Sprint 1 - Backend REST
+
+### 7.1 Objetivo
+
+A Sprint 1 implementou a base funcional do HubArena, com backend REST, persistência em PostgreSQL e endpoints para os principais recursos do domínio.
+
+### 7.2 Funcionalidades Implementadas
+
+- Cadastro de usuários.
+- Listagem e consulta de usuários.
+- Cadastro e consulta de arenas.
+- Cadastro e consulta de quadras.
+- Criação de reservas.
+- Aceite e recusa de reservas.
+- Organização do backend em camadas.
+- Docker Compose para PostgreSQL.
+- Coleção Postman para validação.
+
+### 7.3 Fluxo Validado
+
+1. Criar usuário prestador.
+2. Criar usuário cliente.
+3. Criar arena vinculada ao prestador.
+4. Criar quadra vinculada à arena.
+5. Criar reserva vinculada ao cliente e à quadra.
+6. Atualizar status da reserva para `ACCEPTED` ou `REJECTED`.
+
+---
+
+## 8. Sprint 2 - RabbitMQ e Comunicação Assíncrona
+
+### 8.1 Objetivo
+
+A Sprint 2 adicionou comunicação assíncrona ao sistema utilizando RabbitMQ como middleware orientado a mensagens.
+
+### 8.2 Componentes Adicionados
+
+| Componente | Função |
+|---|---|
+| rabbitmq_client.py | Gerencia conexão com RabbitMQ |
+| event_publisher.py | Publica eventos no broker |
+| reservation_consumer.py | Consome eventos relacionados a reservas |
+
+### 8.3 Eventos
+
+| Evento | Descrição |
+|---|---|
+| reservation.created | Publicado quando uma reserva é criada |
+| reservation.status_changed | Publicado quando uma reserva é aceita ou recusada |
+| reservation.cancelled | Publicado quando uma reserva é cancelada |
+| reservation.finished | Publicado quando uma reserva é finalizada |
+
+### 8.4 Fluxo Assíncrono
+
+```text
+Cliente cria reserva
+        |
+Backend salva no PostgreSQL
+        |
+Backend publica evento reservation.created
+        |
+RabbitMQ recebe mensagem
+        |
+Consumer processa evento
+        |
+Prestador visualiza solicitação
+```
+
+### 8.5 Painel RabbitMQ
+
+```text
+http://localhost:15672
+Usuário: guest
+Senha: guest
+```
+
+---
+
+## 9. Sprint 3 - Aplicativo Flutter do Cliente
+
+### 9.1 Objetivo
+
+A Sprint 3 iniciou a implementação mobile com Flutter, integrando o aplicativo ao backend REST.
+
+### 9.2 Funcionalidades do Cliente
+
+- Tela inicial.
+- Login.
+- Cadastro.
+- Visualização de arenas.
+- Visualização de quadras.
+- Criação de reservas.
+- Consulta de reservas do cliente.
+- Atualização por polling.
+- Perfil do usuário.
+- Notificações visuais.
+
+### 9.3 Integração REST
+
+O Flutter passou a consumir endpoints do backend para:
+
+- usuários;
+- arenas;
+- quadras;
+- reservas;
+- status de reservas.
+
+---
+
+## 10. Sprint 4 - App Prestador e Integração Final
+
+### 10.1 Objetivo
+
+A Sprint 4 completou o fluxo do sistema com app do prestador e integração final ponta a ponta entre cliente, backend, RabbitMQ e prestador.
+
+### 10.2 Funcionalidades do Prestador
+
+- Login.
+- Cadastro.
+- Perfil como `EMPRESA` ou `USUARIO`.
+- Dashboard.
+- Solicitações pendentes.
+- Reservas em andamento.
+- Histórico.
+- Avisos/notificações.
+- Cadastro de arenas.
+- Edição de arenas.
+- Exclusão de arenas.
+- Cadastro de quadras.
+- Edição de quadras.
+- Exclusão de quadras.
+- Aceite e recusa de reservas.
+- Finalização de reservas.
+
+### 10.3 Funcionalidades do Cliente na Sprint 4
+
+- Pesquisa por esporte, arena ou quadra.
+- Filtros por esporte com emojis.
+- Visualização de arenas com imagem.
+- Visualização de quadras com imagem.
+- Criação de reservas.
+- Cancelamento de reservas pendentes.
+- Avisos e notificações.
+- Limpeza de notificações.
+- Perfil editável.
+
+### 10.4 Imagens Automáticas
+
+O backend gera automaticamente imagens padrão para arenas e quadras quando o usuário não informa uma URL manual.
+
+Exemplo:
+
+```json
+{
+  "name": "Arena Futebol Pampulha",
+  "sport": "Futebol",
+  "imageUrl": null
+}
+```
+
+Resultado esperado:
+
+```json
+{
+  "name": "Arena Futebol Pampulha",
+  "sport": "Futebol",
+  "imageUrl": "https://images.pexels.com/..."
+}
+```
+
+O usuário pode editar posteriormente e substituir a imagem por outra URL.
+
+---
+
+## 11. Banco de Dados
+
+### 11.1 Configuração Local
+
+| Item | Valor |
+|---|---|
+| Database | hubarena_db |
+| User | hubarena_user |
+| Password | hubarena_pass |
+| Porta | 5432 |
+
+### 11.2 Tabelas Principais
+
+| Tabela | Descrição |
+|---|---|
+| users | Clientes e prestadores |
+| arenas | Arenas esportivas |
+| courts | Quadras vinculadas às arenas |
+| reservations | Solicitações e reservas |
+
+### 11.3 Status de Reserva
+
+| Status | Descrição |
+|---|---|
+| PENDING | Reserva criada e aguardando resposta |
+| ACCEPTED | Reserva aceita pelo prestador |
+| REJECTED | Reserva recusada pelo prestador |
+| CANCELLED | Reserva cancelada pelo cliente |
+| FINISHED | Reserva finalizada pelo prestador |
+
+---
+
+## 12. Como Executar o Projeto
+
+Os comandos abaixo devem ser executados considerando a estrutura local do projeto.
+
+### 12.1 Subir PostgreSQL e RabbitMQ
+
+Dentro da pasta `backend/`:
 
 ```bash
 docker compose up -d
 ```
 
-> Esse comando inicia o container PostgreSQL utilizado pelo backend.
+Ou, caso os containers já existam:
 
----
+```bash
+docker start hubarena-postgres hubarena-rabbitmq
+```
 
-### 5.3 Ativar o ambiente virtual
+### 12.2 Ativar Ambiente Virtual
 
 No Git Bash:
 
 ```bash
-source venv/bin/activate
+source .venv/Scripts/activate
 ```
 
-> Após a ativação, o terminal deve exibir algo semelhante a `(venv)`.
+### 12.3 Instalar Dependências
 
----
+```bash
+pip install -r requirements.txt
+```
 
-### 5.4 Criar as tabelas no banco
+### 12.4 Criar ou Atualizar Tabelas
 
 ```bash
 python init_db.py
 ```
 
-> Esse comando cria as tabelas do banco de dados com base nos modelos definidos no backend.
-
----
-
-### 5.5 Rodar o servidor Flask
+### 12.5 Rodar Backend
 
 ```bash
 python run.py
 ```
 
-A API ficará disponível em:
+API disponível em:
 
 ```text
 http://127.0.0.1:5000
 ```
 
----
+### 12.6 Rodar Consumer RabbitMQ
 
-## 6. Documentação da Sprint 1
+Em outro terminal:
 
-> **Documentação consolidada**
->
-> Os principais documentos formais da Sprint 1 estão reunidos na pasta:
-
-```text
-docs/sprint1/
+```bash
+cd backend
+source .venv/Scripts/activate
+python -m app.messaging.reservation_consumer
 ```
 
-Arquivos principais:
+### 12.7 Rodar App Flutter
 
-| Arquivo | Descrição |
-|---|---|
-| `proposta_sprint1.pdf` | Documento de proposta em PDF |
-| `proposta_sprint1.md` | Documento de proposta em Markdown |
-| `architecture.puml` | Diagrama de arquitetura em PlantUML |
-| `hubarena_architecture.png` | Imagem gerada do diagrama de arquitetura |
-| `schema.md` | Documentação do schema do banco de dados |
-| `api_test_results.md` | Relatório de execução dos testes automatizados |
+```bash
+cd mobile/hubarena_app
+
+flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:5000 --dart-define=CLIENT_ID=2 --dart-define=PROVIDER_ID=1
+```
 
 ---
 
-## 7. Coleção Postman
+## 13. Credenciais de Teste
 
-> **Testes dos endpoints**
->
-> A coleção Postman da Sprint 1 está localizada em:
+### Cliente
 
 ```text
-postman/HubArena_Sprint1.postman_collection.json
+cliente@hubarena.com
+123456
 ```
 
-Essa coleção contém os endpoints REST implementados na Sprint 1, organizados nos seguintes grupos:
+### Prestador
+
+```text
+prestador@hubarena.com
+123456
+```
+
+---
+
+## 14. Endpoints Implementados
+
+### Health
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| GET | /health/api | Verifica se a API está ativa |
+| GET | /health/db | Verifica conexão com PostgreSQL |
+| GET | /health/rabbitmq | Verifica conexão com RabbitMQ |
+
+### Users
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| POST | /users | Cria cliente ou prestador |
+| GET | /users | Lista usuários |
+| GET | /users/{id} | Consulta usuário por ID |
+| POST | /users/login | Realiza login |
+| PUT | /users/{id} | Atualiza perfil |
+| PUT | /users/{id}/password | Altera senha |
+| PUT | /users/{id}/profile-photo | Atualiza foto de perfil |
+| DELETE | /users/{id}/profile-photo | Remove foto de perfil |
+
+### Arenas
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| POST | /arenas | Cria arena |
+| GET | /arenas | Lista arenas |
+| GET | /arenas/{id} | Consulta arena |
+| PUT | /arenas/{id} | Atualiza arena |
+| DELETE | /arenas/{id} | Exclui arena |
+
+### Courts
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| POST | /courts | Cria quadra |
+| GET | /courts | Lista quadras |
+| GET | /courts/{id} | Consulta quadra |
+| PUT | /courts/{id} | Atualiza quadra |
+| DELETE | /courts/{id} | Exclui quadra |
+
+### Reservations
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| POST | /reservations | Cria reserva |
+| GET | /reservations | Lista reservas |
+| GET | /reservations/{id} | Consulta reserva |
+| GET | /reservations/client/{client_id} | Lista reservas do cliente |
+| GET | /reservations/provider/{provider_id} | Lista reservas do prestador |
+| GET | /reservations/status/{status} | Lista reservas por status |
+| PUT | /reservations/{id}/accept | Aceita reserva |
+| PUT | /reservations/{id}/reject | Recusa reserva |
+| PUT | /reservations/{id}/cancel | Cancela reserva |
+| PUT | /reservations/{id}/finish | Finaliza reserva |
+
+---
+
+## 15. Coleção Postman
+
+A coleção Postman deve conter os seguintes grupos:
 
 ```text
 Health
@@ -194,70 +457,162 @@ Users
 Arenas
 Courts
 Reservations
+RabbitMQ
+Sprint4
+```
+
+Coleções utilizadas:
+
+```text
+postman/HubArena_Sprint1.postman_collection.json
+postman/HubArena_Sprint2.postman_collection.json
+postman/HubArena_Sprint4.postman_collection.json
 ```
 
 ---
 
-## 8. Próximas Sprints
+## 16. Fluxo Completo Validado
 
-### Sprint 2
-
-Integração com **RabbitMQ** e implementação de eventos assíncronos.
-
-Eventos previstos:
-
-| Evento | Descrição |
-|---|---|
-| `reservation_created` | Publicado quando uma reserva for criada |
-| `reservation_accepted` | Publicado quando uma reserva for aceita |
-| `reservation_rejected` | Publicado quando uma reserva for recusada |
-
----
-
-### Sprint 3
-
-Desenvolvimento do aplicativo Flutter do cliente.
-
-O app cliente deverá permitir:
-
-- consultar arenas;
-- visualizar quadras;
-- criar reservas;
-- acompanhar atualizações de status.
-
----
-
-### Sprint 4
-
-Desenvolvimento do aplicativo Flutter do prestador e integração final de ponta a ponta.
-
-O app prestador deverá permitir:
-
-- visualizar reservas pendentes;
-- aceitar reservas;
-- recusar reservas;
-- acompanhar solicitações em andamento.
+```text
+Prestador faz login
+        |
+Cria arena sem imageUrl
+        |
+Backend gera imagem automática
+        |
+Cria quadra sem imageUrl
+        |
+Backend gera imagem automática
+        |
+Cliente faz login
+        |
+Pesquisa esporte/arena
+        |
+Abre arena
+        |
+Escolhe quadra
+        |
+Cria reserva
+        |
+Backend publica evento RabbitMQ
+        |
+Prestador visualiza solicitação
+        |
+Prestador aceita
+        |
+Cliente visualiza atualização
+        |
+Prestador finaliza reserva
+```
 
 ---
 
-## 9. Caminhos Principais
+## 17. Testes
 
-| Item | Caminho |
-|---|---|
-| Backend REST | `backend/` |
-| README do backend | `backend/README.md` |
-| Documentação Sprint 1 | `docs/sprint1/` |
-| Proposta em PDF | `docs/sprint1/proposta_sprint1.pdf` |
-| Diagrama PlantUML | `docs/sprint1/architecture.puml` |
-| Imagem do diagrama | `docs/sprint1/hubarena_architecture.png` |
-| Schema do banco | `docs/sprint1/schema.md` |
-| Relatório de testes | `docs/sprint1/api_test_results.md` |
-| Coleção Postman | `postman/HubArena_Sprint1.postman_collection.json` |
+### Backend
+
+```bash
+python run.py
+```
+
+Validar no Postman:
+
+```text
+GET /health/api
+GET /health/db
+GET /health/rabbitmq
+```
+
+### RabbitMQ
+
+```bash
+python -m app.messaging.reservation_consumer
+```
+
+Criar reserva no Postman e verificar evento no terminal do consumer.
+
+### Flutter
+
+```bash
+dart format lib test
+flutter analyze
+flutter test
+```
+
+### Teste Manual no App
+
+1. Entrar como prestador.
+2. Criar arena.
+3. Criar quadra.
+4. Entrar como cliente.
+5. Pesquisar arena.
+6. Criar reserva.
+7. Voltar ao prestador.
+8. Aceitar reserva.
+9. Voltar ao cliente.
+10. Verificar atualização.
 
 ---
 
-## 10. Observação Final
+## 18. Estrutura de Pastas do Backend
 
-A estrutura do projeto foi planejada para manter as entregas organizadas por sprint, separando código-fonte, documentação, coleção de testes e artefatos futuros dos aplicativos móveis.
+```text
+backend/
+├── app/
+│   ├── config/
+│   ├── controllers/
+│   ├── database/
+│   ├── messaging/
+│   ├── models/
+│   ├── repositories/
+│   ├── routes/
+│   └── services/
+├── docs/
+├── postman/
+├── scripts/
+├── docker-compose.yml
+├── init_db.py
+├── run.py
+├── requirements.txt
+└── README.md
+```
 
-A Sprint 1 entrega a base funcional do sistema por meio do backend REST e prepara o HubArena para evoluir nas próximas etapas com comunicação assíncrona, aplicativos móveis e integração completa entre cliente, backend, middleware e prestador.
+---
+
+## 19. Evidências Recomendadas para Apresentação
+
+- Backend Flask rodando.
+- Consumer RabbitMQ rodando.
+- Painel RabbitMQ aberto.
+- App Flutter executando.
+- Prestador criando arena.
+- Prestador criando quadra.
+- Cliente criando reserva.
+- Evento RabbitMQ sendo exibido.
+- Prestador aceitando reserva.
+- Cliente visualizando atualização.
+- Filtros e pesquisa funcionando.
+- Notificações funcionando.
+
+---
+
+## 20. Roadmap
+
+Melhorias futuras:
+
+- Autenticação JWT.
+- Upload real de imagens.
+- Integração com API externa de imagens.
+- WebSocket em vez de polling.
+- Push notifications.
+- Avaliações de arenas.
+- Pagamentos online.
+- Geolocalização.
+- Mapa de arenas próximas.
+- Deploy em nuvem.
+
+---
+
+## 21. Observação Final
+
+A documentação original da Sprint 1 foi reorganizada e ampliada para representar a evolução completa do HubArena nas quatro sprints. O projeto passou de uma API REST básica para um sistema distribuído com backend, banco relacional, mensageria assíncrona e aplicativo Flutter integrado.

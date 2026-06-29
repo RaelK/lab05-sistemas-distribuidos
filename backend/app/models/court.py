@@ -13,7 +13,11 @@ class Court(db.Model):
         nullable=False
     )
 
+    name = db.Column(db.String(120), nullable=True)
     sport = db.Column(db.String(80), nullable=False)
+    description = db.Column(db.String(500), nullable=True)
+    image_url = db.Column(db.String(700), nullable=True)
+
     price_hour = db.Column(db.Float, nullable=False)
     capacity = db.Column(db.Integer, nullable=False)
     available = db.Column(db.Boolean, default=True)
@@ -32,7 +36,10 @@ class Court(db.Model):
         return {
             "id": self.id,
             "arenaId": self.arena_id,
+            "name": self.name or f"Quadra de {self.sport}",
             "sport": self.sport,
+            "description": self.description,
+            "imageUrl": self.image_url,
             "priceHour": self.price_hour,
             "capacity": self.capacity,
             "available": self.available,
